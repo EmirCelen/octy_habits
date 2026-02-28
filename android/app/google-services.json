@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "428183904453",
+    "project_id": "octy-habits",
+    "storage_bucket": "octy-habits.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:428183904453:android:34a8112e29ff5c26cc90ac",
+        "android_client_info": {
+          "package_name": "com.example.octy_habits"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAihz8B-OyUbviiBXewBdF2D_6oD8ubDR0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
