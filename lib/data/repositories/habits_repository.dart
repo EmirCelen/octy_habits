@@ -36,6 +36,11 @@ class HabitsRepository {
       'colorValue': colorValue,
       'isActive': true,
       'createdAt': FieldValue.serverTimestamp(),
+
+      // ✅ aggregate defaults
+      'currentStreak': 0,
+      'longestStreak': 0,
+      'lastCompletedDateKey': null,
     });
   }
 }

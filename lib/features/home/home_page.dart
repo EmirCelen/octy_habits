@@ -11,6 +11,7 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final habitsAsync = ref.watch(habitsStreamProvider);
     final todayAsync = ref.watch(todayCompletionsProvider);
+    final weeklyAsync = ref.watch(weeklyDoneCountsProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -22,55 +23,63 @@ class HomePage extends ConsumerWidget {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(child: Text('Error: $e')),
               data: (todayMap) {
-                return LayoutBuilder(
-                  builder: (context, c) {
-                    final size = math.min(c.maxWidth, c.maxHeight);
+                return weeklyAsync.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(child: Text('Error: $e')),
+                  data: (weeklyCounts) {
+                    return LayoutBuilder(
+                      builder: (context, c) {
+                        final size = math.min(c.maxWidth, c.maxHeight);
 
-                    // Ortadaki ahtapot boyutu
-                    final octoSize = size * 0.50; // %32
-                    // Habit çemberinin yarıçapı
-                    final radius = size * 0.40; // %30
-                    // Her habit düğmesinin boyutu
-                    final itemSize = size * 0.20; // %17
+                        // Ortadaki ahtapot boyutu
+                        final octoSize = size * 0.50;
+                        // Habit çemberinin yarıçapı
+                        final radius = size * 0.40;
+                        // Her habit düğmesinin boyutu
+                        final itemSize = size * 0.20;
 
-                    return Center(
-                      child: SizedBox(
-                        width: size,
-                        height: size,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // Arka plan hafif halo
-                            Container(
-                              width: octoSize * 1.5,
-                              height: octoSize * 1.5,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: RadialGradient(
-                                  colors: [
-                                    Colors.cyan.withOpacity(0.15),
-                                    Colors.transparent,
-                                  ],
+                        return Center(
+                          child: SizedBox(
+                            width: size,
+                            height: size,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // Arka plan hafif halo
+                                Container(
+                                  width: octoSize * 1.5,
+                                  height: octoSize * 1.5,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: RadialGradient(
+                                      colors: [
+                                        Colors.cyan.withValues(alpha: 0.15),
+                                        Colors.transparent,
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
 
-                            // Ortadaki "ahtapot" placeholder
-                            _OctopusCenter(size: octoSize),
+                                // Ortadaki "ahtapot"
+                                _OctopusCenter(size: octoSize),
 
-                            // Habit items dairesel dizilim
-                            ..._buildHabitRingItems(
-                              context: context,
-                              ref: ref,
-                              habitsCount: habits.length,
-                              habits: habits,
-                              todayMap: todayMap,
-                              radius: radius,
-                              itemSize: itemSize,
+                                // Habit items dairesel dizilim
+                                ..._buildHabitRingItems(
+                                  context: context,
+                                  ref: ref,
+                                  habitsCount: habits.length,
+                                  habits: habits,
+                                  todayMap: todayMap,
+                                  weeklyCounts: weeklyCounts,
+                                  radius: radius,
+                                  itemSize: itemSize,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      },
                     );
                   },
                 );
@@ -88,6 +97,7 @@ class HomePage extends ConsumerWidget {
     required int habitsCount,
     required List<dynamic> habits,
     required Map<String, bool> todayMap,
+    required Map<String, int> weeklyCounts,
     required double radius,
     required double itemSize,
   }) {
@@ -108,7 +118,16 @@ class HomePage extends ConsumerWidget {
 
     return List.generate(habitsCount, (i) {
       final h = habits[i];
+
       final doneToday = todayMap[h.id] == true;
+
+      // ✅ weekly progress = (son 7 gün done) / goalPerWeek
+      final weeklyDone = weeklyCounts[h.id] ?? 0;
+      final goal = (h.goalPerWeek is int) ? h.goalPerWeek as int : 0;
+
+      final progress = (goal <= 0)
+          ? 0.0
+          : (weeklyDone / goal).clamp(0.0, 1.0).toDouble();
 
       // Açıyı -90 dereceden başlat (tepe)
       final angle = (-math.pi / 2) + (2 * math.pi * i / habitsCount);
@@ -124,8 +143,8 @@ class HomePage extends ConsumerWidget {
           child: _HabitRingItem(
             title: h.title,
             doneToday: doneToday,
-            // Şimdilik günlük progress: done ise 1, değilse 0
-            progress: doneToday ? 1.0 : 0.0,
+            progress: progress,
+            subtitle: '$weeklyDone/$goal',
             onToggle: () async {
               await ref
                   .read(habitLogsRepositoryProvider)
@@ -149,10 +168,10 @@ class _OctopusCenter extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withOpacity(0.06),
+        color: Colors.white.withValues(alpha: 0.06),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.25),
+            color: Colors.black.withValues(alpha: 0.25),
             blurRadius: 18,
             offset: const Offset(0, 10),
           ),
@@ -176,12 +195,14 @@ class _HabitRingItem extends StatelessWidget {
   final String title;
   final bool doneToday;
   final double progress;
+  final String subtitle;
   final VoidCallback onToggle;
 
   const _HabitRingItem({
     required this.title,
     required this.doneToday,
     required this.progress,
+    required this.subtitle,
     required this.onToggle,
   });
 
@@ -192,7 +213,7 @@ class _HabitRingItem extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Ring
+          // Ring (weekly progress)
           SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -206,23 +227,37 @@ class _HabitRingItem extends StatelessWidget {
             margin: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.black.withOpacity(0.18),
+              color: Colors.black.withValues(alpha: 0.18),
             ),
             child: Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelMedium,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.06),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
 
-          // Done badge
+          // Done badge (today)
           if (doneToday)
             Positioned(
               right: 2,
@@ -232,7 +267,7 @@ class _HabitRingItem extends StatelessWidget {
                 height: 22,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.green.withOpacity(0.9),
+                  color: Colors.green.withValues(alpha: 0.9),
                 ),
                 child: const Icon(Icons.check, size: 14, color: Colors.white),
               ),

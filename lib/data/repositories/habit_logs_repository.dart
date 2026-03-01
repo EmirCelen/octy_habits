@@ -16,6 +16,9 @@ class HabitLogsRepository {
   CollectionReference<Map<String, dynamic>> _logsRef() =>
       _db.collection('users').doc(_uid).collection('habitLogs');
 
+  DocumentReference<Map<String, dynamic>> _habitRef(String habitId) =>
+      _db.collection('users').doc(_uid).collection('habits').doc(habitId);
+
   static String dateKey(DateTime d) {
     final y = d.year.toString().padLeft(4, '0');
     final m = d.month.toString().padLeft(2, '0');
@@ -25,6 +28,8 @@ class HabitLogsRepository {
 
   static String logId({required String habitId, required String dateKey}) =>
       '${habitId}_$dateKey';
+
+  static DateTime _dayOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
   Stream<Map<String, bool>> watchTodayCompletions(DateTime today) {
     final key = dateKey(today);
@@ -45,24 +50,67 @@ class HabitLogsRepository {
     required bool completed,
     DateTime? today,
   }) async {
-    final key = dateKey(today ?? DateTime.now());
-    final id = logId(habitId: habitId, dateKey: key);
+    final now = _dayOnly(today ?? DateTime.now());
+    final todayKey = dateKey(now);
+    final yesterdayKey = dateKey(now.subtract(const Duration(days: 1)));
 
-    final ref = _logsRef().doc(id);
+    final id = logId(habitId: habitId, dateKey: todayKey);
+    final logRef = _logsRef().doc(id);
+    final habitRef = _habitRef(habitId);
 
-    if (completed) {
-      await ref.set({
-        'habitId': habitId,
-        'dateKey': key,
-        'completed': true,
-        'createdAt': FieldValue.serverTimestamp(),
+    await _db.runTransaction((tx) async {
+      // ✅ 1️⃣ ÖNCE READ
+      final habitSnap = await tx.get(habitRef);
+      final habitData = habitSnap.data() ?? <String, dynamic>{};
+
+      final lastKey = habitData['lastCompletedDateKey'] as String?;
+      final currentStreak = (habitData['currentStreak'] ?? 0) as int;
+      final longestStreak = (habitData['longestStreak'] ?? 0) as int;
+
+      int newCurrent = currentStreak;
+      int newLongest = longestStreak;
+      String? newLastKey = lastKey;
+
+      if (completed) {
+        if (lastKey == todayKey) {
+          newCurrent = currentStreak;
+        } else if (lastKey == yesterdayKey) {
+          newCurrent = currentStreak + 1;
+        } else {
+          newCurrent = 1;
+        }
+        newLastKey = todayKey;
+        newLongest = newCurrent > longestStreak ? newCurrent : longestStreak;
+      } else {
+        if (lastKey == todayKey) {
+          newCurrent = currentStreak - 1;
+          if (newCurrent <= 0) {
+            newCurrent = 0;
+            newLastKey = null;
+          } else {
+            newLastKey = yesterdayKey;
+          }
+        }
+      }
+
+      // ✅ 2️⃣ SONRA WRITE
+      if (completed) {
+        tx.set(logRef, {
+          'habitId': habitId,
+          'dateKey': todayKey,
+          'completed': true,
+          'createdAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      } else {
+        tx.delete(logRef);
+      }
+
+      tx.set(habitRef, {
+        'currentStreak': newCurrent,
+        'longestStreak': newLongest,
+        'lastCompletedDateKey': newLastKey,
+        'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-    } else {
-      // “uncheck” için iki yaklaşım var:
-      // A) delete (basit)
-      // B) completed:false (audit için)
-      // MVP: delete
-      await ref.delete();
-    }
+    });
   }
 }
