@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../features/habits/logic/streak_engine.dart';
+
 class HabitLogsRepository {
   final FirebaseFirestore _db;
   final FirebaseAuth _auth;
@@ -45,6 +47,32 @@ class HabitLogsRepository {
     });
   }
 
+  Stream<Set<String>> watchHabitCompletedDateKeysInRange({
+    required String habitId,
+    required DateTime start,
+    required DateTime end,
+  }) {
+    final startKey = dateKey(_dayOnly(start));
+    final endKey = dateKey(_dayOnly(end));
+    return _logsRef().snapshots().map((snap) {
+      final keys = <String>{};
+      for (final d in snap.docs) {
+        final data = d.data();
+        final itemHabitId = (data['habitId'] ?? '') as String;
+        if (itemHabitId != habitId) continue;
+
+        final completed = (data['completed'] ?? false) as bool;
+        if (!completed) continue;
+
+        final key = (data['dateKey'] ?? '') as String;
+        if (key.isEmpty) continue;
+        if (key.compareTo(startKey) < 0 || key.compareTo(endKey) > 0) continue;
+        keys.add(key);
+      }
+      return keys;
+    });
+  }
+
   Future<void> toggleToday({
     required String habitId,
     required bool completed,
@@ -63,35 +91,16 @@ class HabitLogsRepository {
       final habitSnap = await tx.get(habitRef);
       final habitData = habitSnap.data() ?? <String, dynamic>{};
 
-      final lastKey = habitData['lastCompletedDateKey'] as String?;
-      final currentStreak = (habitData['currentStreak'] ?? 0) as int;
-      final longestStreak = (habitData['longestStreak'] ?? 0) as int;
-
-      int newCurrent = currentStreak;
-      int newLongest = longestStreak;
-      String? newLastKey = lastKey;
-
-      if (completed) {
-        if (lastKey == todayKey) {
-          newCurrent = currentStreak;
-        } else if (lastKey == yesterdayKey) {
-          newCurrent = currentStreak + 1;
-        } else {
-          newCurrent = 1;
-        }
-        newLastKey = todayKey;
-        newLongest = newCurrent > longestStreak ? newCurrent : longestStreak;
-      } else {
-        if (lastKey == todayKey) {
-          newCurrent = currentStreak - 1;
-          if (newCurrent <= 0) {
-            newCurrent = 0;
-            newLastKey = null;
-          } else {
-            newLastKey = yesterdayKey;
-          }
-        }
-      }
+      final nextState = applyToggleToStreak(
+        completed: completed,
+        todayKey: todayKey,
+        yesterdayKey: yesterdayKey,
+        previous: StreakState(
+          lastCompletedDateKey: habitData['lastCompletedDateKey'] as String?,
+          currentStreak: (habitData['currentStreak'] ?? 0) as int,
+          longestStreak: (habitData['longestStreak'] ?? 0) as int,
+        ),
+      );
 
       // ✅ 2️⃣ SONRA WRITE
       if (completed) {
@@ -106,9 +115,9 @@ class HabitLogsRepository {
       }
 
       tx.set(habitRef, {
-        'currentStreak': newCurrent,
-        'longestStreak': newLongest,
-        'lastCompletedDateKey': newLastKey,
+        'currentStreak': nextState.currentStreak,
+        'longestStreak': nextState.longestStreak,
+        'lastCompletedDateKey': nextState.lastCompletedDateKey,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     });

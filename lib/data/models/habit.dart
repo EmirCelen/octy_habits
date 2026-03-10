@@ -6,6 +6,8 @@ class Habit {
   final int goalPerWeek;
   final int colorValue;
   final bool isActive;
+  final bool isPinned;
+  final int sortOrder;
   final DateTime? createdAt;
 
   // ✅ Aggregate fields (MVP)
@@ -19,6 +21,8 @@ class Habit {
     required this.goalPerWeek,
     required this.colorValue,
     required this.isActive,
+    required this.isPinned,
+    required this.sortOrder,
     required this.createdAt,
     required this.currentStreak,
     required this.longestStreak,
@@ -33,6 +37,8 @@ class Habit {
       goalPerWeek: (data['goalPerWeek'] ?? 3) as int,
       colorValue: (data['colorValue'] ?? 0xFF7C5CFF) as int,
       isActive: (data['isActive'] ?? true) as bool,
+      isPinned: (data['isPinned'] ?? false) as bool,
+      sortOrder: (data['sortOrder'] ?? 0) as int,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
 
       // ✅ defaults (backward compatible)
@@ -47,6 +53,8 @@ class Habit {
     'goalPerWeek': goalPerWeek,
     'colorValue': colorValue,
     'isActive': isActive,
+    'isPinned': isPinned,
+    'sortOrder': sortOrder,
     'createdAt': FieldValue.serverTimestamp(),
 
     // ✅ defaults

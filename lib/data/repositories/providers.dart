@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/habit.dart';
+import '../../features/assistant/logic/octy_insight_engine.dart';
+import 'app_events_repository.dart';
 import 'habit_logs_repository.dart';
 import 'habits_repository.dart';
 
@@ -13,6 +15,20 @@ final firebaseAuthProvider = Provider<FirebaseAuth>(
 final firestoreProvider = Provider<FirebaseFirestore>(
   (ref) => FirebaseFirestore.instance,
 );
+
+final authStateProvider = StreamProvider<User?>((ref) {
+  return ref.watch(firebaseAuthProvider).authStateChanges();
+});
+
+final userProfileProvider =
+    StreamProvider.family<Map<String, dynamic>?, String>((ref, uid) {
+      return ref
+          .watch(firestoreProvider)
+          .collection('users')
+          .doc(uid)
+          .snapshots()
+          .map((doc) => doc.data());
+    });
 
 final habitLogsRepositoryProvider = Provider<HabitLogsRepository>((ref) {
   return HabitLogsRepository(
@@ -28,8 +44,19 @@ final habitsRepositoryProvider = Provider<HabitsRepository>((ref) {
   );
 });
 
+final appEventsRepositoryProvider = Provider<AppEventsRepository>((ref) {
+  return AppEventsRepository(
+    ref.watch(firestoreProvider),
+    ref.watch(firebaseAuthProvider),
+  );
+});
+
 final habitsStreamProvider = StreamProvider<List<Habit>>((ref) {
   return ref.watch(habitsRepositoryProvider).watchHabits();
+});
+
+final recentAppEventsProvider = StreamProvider<List<AppEventEntry>>((ref) {
+  return ref.watch(appEventsRepositoryProvider).watchRecentEvents(days: 7);
 });
 
 final todayCompletionsProvider = StreamProvider<Map<String, bool>>((ref) {
@@ -47,20 +74,17 @@ final weeklyDoneCountsProvider = StreamProvider<Map<String, int>>((ref) {
   if (uid == null) return Stream.value(<String, int>{});
 
   final now = DateTime.now();
-  final keys = List.generate(7, (i) {
-    final d = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    ).subtract(Duration(days: i));
-    return HabitLogsRepository.dateKey(d);
-  });
+  final today = DateTime(now.year, now.month, now.day);
+  final start = today.subtract(const Duration(days: 6));
+  final startKey = HabitLogsRepository.dateKey(start);
+  final endKey = HabitLogsRepository.dateKey(today);
 
   return db
       .collection('users')
       .doc(uid)
       .collection('habitLogs')
-      .where('dateKey', whereIn: keys) // max 10, biz 7
+      .where('dateKey', isGreaterThanOrEqualTo: startKey)
+      .where('dateKey', isLessThanOrEqualTo: endKey)
       .snapshots()
       .map((snap) {
         final counts = <String, int>{};
@@ -75,7 +99,46 @@ final weeklyDoneCountsProvider = StreamProvider<Map<String, int>>((ref) {
       });
 });
 
-/// ✅ MVP: Son 10 gün toplam completion (whereIn limiti yüzünden 10 gün)
+/// Son 7 gun icin gunluk toplam tamamlanma adetleri (eskiden bugune).
+final weeklyDailyTotalsProvider = StreamProvider<List<int>>((ref) {
+  final auth = ref.watch(firebaseAuthProvider);
+  final db = ref.watch(firestoreProvider);
+
+  final uid = auth.currentUser?.uid;
+  if (uid == null) return Stream.value(List<int>.filled(7, 0));
+
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final start = today.subtract(const Duration(days: 6));
+  final startKey = HabitLogsRepository.dateKey(start);
+  final endKey = HabitLogsRepository.dateKey(today);
+
+  return db
+      .collection('users')
+      .doc(uid)
+      .collection('habitLogs')
+      .where('dateKey', isGreaterThanOrEqualTo: startKey)
+      .where('dateKey', isLessThanOrEqualTo: endKey)
+      .snapshots()
+      .map((snap) {
+        final byKey = <String, int>{};
+        for (final doc in snap.docs) {
+          final data = doc.data();
+          final completed = (data['completed'] ?? false) as bool;
+          if (!completed) continue;
+          final key = (data['dateKey'] ?? '') as String;
+          if (key.isEmpty) continue;
+          byKey[key] = (byKey[key] ?? 0) + 1;
+        }
+
+        return List<int>.generate(7, (i) {
+          final d = start.add(Duration(days: i));
+          return byKey[HabitLogsRepository.dateKey(d)] ?? 0;
+        });
+      });
+});
+
+/// Son 30 gunde toplam completion.
 final last30DaysTotalCompletedProvider = StreamProvider<int>((ref) {
   final auth = ref.watch(firebaseAuthProvider);
   final db = ref.watch(firestoreProvider);
@@ -84,20 +147,17 @@ final last30DaysTotalCompletedProvider = StreamProvider<int>((ref) {
   if (uid == null) return Stream.value(0);
 
   final now = DateTime.now();
-  final keys = List.generate(10, (i) {
-    final d = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    ).subtract(Duration(days: i));
-    return HabitLogsRepository.dateKey(d);
-  });
+  final today = DateTime(now.year, now.month, now.day);
+  final start = today.subtract(const Duration(days: 29));
+  final startKey = HabitLogsRepository.dateKey(start);
+  final endKey = HabitLogsRepository.dateKey(today);
 
   return db
       .collection('users')
       .doc(uid)
       .collection('habitLogs')
-      .where('dateKey', whereIn: keys)
+      .where('dateKey', isGreaterThanOrEqualTo: startKey)
+      .where('dateKey', isLessThanOrEqualTo: endKey)
       .snapshots()
       .map((snap) {
         int total = 0;
@@ -133,3 +193,44 @@ class StreakSummary {
   final int longest;
   const StreakSummary({required this.current, required this.longest});
 }
+
+final octyInsightProvider = Provider<OctyInsight>((ref) {
+  final habits = ref.watch(habitsStreamProvider).valueOrNull ?? const <Habit>[];
+  final todayMap = ref.watch(todayCompletionsProvider).valueOrNull ?? const <String, bool>{};
+  final weeklyCounts = ref.watch(weeklyDoneCountsProvider).valueOrNull ?? const <String, int>{};
+  final events = ref.watch(recentAppEventsProvider).valueOrNull ?? const <AppEventEntry>[];
+
+  final inputs = habits
+      .map(
+        (h) => HabitRiskInput(
+          habit: h,
+          weeklyDone: weeklyCounts[h.id] ?? 0,
+          doneToday: todayMap[h.id] == true,
+        ),
+      )
+      .toList(growable: false);
+
+  final loginDays = events
+      .where((e) => e.type == 'app_open')
+      .map((e) => e.dateKey)
+      .toSet()
+      .length;
+  final loginRegularity = (loginDays / 7).clamp(0.0, 1.0);
+
+  final assistantMessages = events.where((e) => e.type == 'assistant_message').length;
+  final assistantEngagement = (assistantMessages / 7).clamp(0.0, 1.0);
+
+  final eveningEvents = events.where((e) => e.hour >= 18 && e.hour <= 23).length;
+  final allEvents = events.isEmpty ? 1 : events.length;
+  final eveningPattern = (eveningEvents / allEvents).clamp(0.0, 1.0);
+
+  final doneToday = todayMap.values.where((v) => v).length;
+  return buildOctyInsight(
+    habits: inputs,
+    totalHabits: habits.length,
+    doneTodayCount: doneToday,
+    loginRegularity: loginRegularity,
+    assistantEngagement: assistantEngagement,
+    eveningUsagePattern: eveningPattern,
+  );
+});

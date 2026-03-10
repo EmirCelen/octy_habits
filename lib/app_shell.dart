@@ -7,7 +7,9 @@ class AppShell extends StatelessWidget {
 
   int _locationToIndex(String location) {
     if (location.startsWith('/home')) return 0;
-    if (location.startsWith('/habits')) return 1;
+    if (location.startsWith('/habits') || location.startsWith('/habit/')) {
+      return 1;
+    }
     if (location.startsWith('/stats')) return 2;
     if (location.startsWith('/profile')) return 3;
     return 0;
@@ -41,18 +43,18 @@ class AppShell extends StatelessWidget {
         selectedIndex: currentIndex,
         onDestinationSelected: (i) => _onTap(context, i),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_rounded), label: 'Home'),
+          NavigationDestination(icon: Icon(Icons.home_rounded), label: 'Ana'),
           NavigationDestination(
             icon: Icon(Icons.checklist_rounded),
-            label: 'Habits',
+            label: 'Aliskanliklar',
           ),
           NavigationDestination(
             icon: Icon(Icons.bar_chart_rounded),
-            label: 'Stats',
+            label: 'Istatistik',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_rounded),
-            label: 'Profile',
+            label: 'Profil',
           ),
         ],
       ),
