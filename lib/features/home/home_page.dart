@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../data/models/habit.dart';
 import '../../data/repositories/providers.dart';
@@ -28,15 +29,15 @@ class HomePage extends ConsumerWidget {
         child: SafeArea(
           child: habitsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Error: $e')),
+            error: (e, _) => Center(child: Text('Hata: $e')),
             data: (habits) {
               return todayAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Error: $e')),
+                error: (e, _) => Center(child: Text('Hata: $e')),
                 data: (todayMap) {
                   return weeklyAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (e, _) => Center(child: Text('Error: $e')),
+                    error: (e, _) => Center(child: Text('Hata: $e')),
                     data: (weeklyCounts) {
                       final prioritizedHabits = _prioritizedHabits(
                         habits: habits,
@@ -54,7 +55,7 @@ class HomePage extends ConsumerWidget {
                                     }
                                     final h = (p['reminderHour'] ?? 21) as int;
                                     final m = (p['reminderMinute'] ?? 0) as int;
-                                    return 'Hatirlatici ${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
+                                    return 'Hatırlatıcı ${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
                                   },
                                   orElse: () => null,
                                 );
@@ -141,14 +142,14 @@ class HomePage extends ConsumerWidget {
                                         style: FilledButton.styleFrom(
                                           shape: const StadiumBorder(),
                                         ),
-                                        child: const Text('Tum aliskanliklari gor'),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '+$hiddenCount more',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodySmall?.copyWith(
+                                            child: const Text('Tüm alışkanlıkları gör'),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            '+$hiddenCount tane daha',
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodySmall?.copyWith(
                                               color: Colors.white54,
                                             ),
                                           ),
@@ -218,19 +219,30 @@ class _HomeRingBoard extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, c) {
-        final effectiveSize = math.min(c.maxWidth, c.maxHeight).clamp(230.0, 460.0);
-        final centerSize = effectiveSize *
+        final effectiveSize =
+            math.min(c.maxWidth, c.maxHeight).clamp(230.0, 460.0).toDouble();
+        final desiredCenterSize = effectiveSize *
             (itemCount <= 3
                 ? 0.58
                 : (itemCount <= 5 ? 0.55 : 0.51));
-        final radius = effectiveSize *
-            (itemCount <= 3
-                ? 0.35
-                : (itemCount <= 5 ? 0.40 : 0.43));
         final itemSize = effectiveSize *
-            (itemCount <= 3
-                ? 0.34
-                : (itemCount <= 5 ? 0.325 : 0.29));
+            (itemCount <= 3 ? 0.34 : (itemCount <= 5 ? 0.325 : 0.29));
+
+        // Push habit rings further out, but guarantee they do not overlap the center octopus.
+        // Strategy:
+        // 1) pick a radius that fits inside the board bounds
+        // 2) if that radius would overlap the center, shrink the center to fit
+        const gap = 12.0;
+        final targetRadius = effectiveSize *
+            (itemCount <= 3 ? 0.40 : (itemCount <= 5 ? 0.44 : 0.47));
+        final maxRadius = ((effectiveSize - itemSize) / 2) - gap;
+        final radius = math.max(0.0, math.min(targetRadius, maxRadius));
+        final maxCenterSize =
+            math.max(0.0, 2 * (radius - (itemSize / 2) - gap));
+        final centerSize = math.max(
+          effectiveSize * 0.36, // don't collapse the center too much
+          math.min(desiredCenterSize, maxCenterSize),
+        );
 
         return Stack(
           alignment: Alignment.center,
@@ -253,7 +265,7 @@ class _HomeRingBoard extends StatelessWidget {
               Positioned(
                 bottom: 16,
                 child: Text(
-                  'Ilk aliskanligini Habits sekmesinden ekle.',
+                  'İlk alışkanlığını Alışkanlıklar sekmesinden ekle.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.white70,
                   ),
@@ -480,7 +492,7 @@ class _TodayProgressBar extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Today Progress',
+          'Bugünkü İlerleme',
           style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Colors.white70),
         ),
         const SizedBox(height: 6),
@@ -547,11 +559,11 @@ class _WeekLineCalendar extends StatelessWidget {
       7,
       (i) => weekStart.add(Duration(days: i)),
     );
-    const labels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
     return Row(
       children: List.generate(days.length, (i) {
         final d = days[i];
+        final label = DateFormat.E('tr_TR').format(d);
         final isToday =
             d.year == today.year && d.month == today.month && d.day == today.day;
         return Expanded(
@@ -573,7 +585,7 @@ class _WeekLineCalendar extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    labels[i],
+                    label,
                     style: (compact
                             ? Theme.of(context).textTheme.labelMedium
                             : Theme.of(context).textTheme.labelLarge)
@@ -620,8 +632,8 @@ class _HomeTopGreeting extends ConsumerWidget {
     final now = DateTime.now();
     final hour = now.hour;
     final salutation = hour < 12
-        ? 'Gunaydin'
-        : (hour < 18 ? 'Iyi gunler' : 'Iyi aksamlar');
+        ? 'Günaydın'
+        : (hour < 18 ? 'İyi günler' : 'İyi akşamlar');
 
     final authUser = ref.watch(authStateProvider).valueOrNull;
     final profile = authUser == null
@@ -632,8 +644,7 @@ class _HomeTopGreeting extends ConsumerWidget {
         ? (profile!['displayName'] as String)
         : 'Dostum';
 
-    final formattedDate =
-        '${_weekdayLabel(now.weekday)}, ${now.day} ${_monthLabel(now.month)}, ${now.year}';
+    final formattedDate = DateFormat.yMMMMEEEEd('tr_TR').format(now);
 
     return Row(
       children: [
@@ -682,28 +693,5 @@ class _HomeTopGreeting extends ConsumerWidget {
         ),
       ],
     );
-  }
-
-  String _weekdayLabel(int weekday) {
-    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return labels[(weekday - 1).clamp(0, 6)];
-  }
-
-  String _monthLabel(int month) {
-    const labels = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return labels[(month - 1).clamp(0, 11)];
   }
 }

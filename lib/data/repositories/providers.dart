@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/habit.dart';
 import '../../features/assistant/logic/octy_insight_engine.dart';
+import '../../features/assistant/logic/ml_risk_model.dart';
 import 'app_events_repository.dart';
 import 'habit_logs_repository.dart';
 import 'habits_repository.dart';
@@ -57,6 +59,17 @@ final habitsStreamProvider = StreamProvider<List<Habit>>((ref) {
 
 final recentAppEventsProvider = StreamProvider<List<AppEventEntry>>((ref) {
   return ref.watch(appEventsRepositoryProvider).watchRecentEvents(days: 7);
+});
+
+final mlRiskModelProvider = FutureProvider<MlRiskModel?>((ref) async {
+  const useMl = bool.fromEnvironment('OCTY_USE_ML', defaultValue: false);
+  if (!useMl) return null;
+  try {
+    final raw = await rootBundle.loadString('assets/ml/model.json');
+    return MlRiskModel.tryParse(raw);
+  } catch (_) {
+    return null;
+  }
 });
 
 final todayCompletionsProvider = StreamProvider<Map<String, bool>>((ref) {
@@ -199,6 +212,7 @@ final octyInsightProvider = Provider<OctyInsight>((ref) {
   final todayMap = ref.watch(todayCompletionsProvider).valueOrNull ?? const <String, bool>{};
   final weeklyCounts = ref.watch(weeklyDoneCountsProvider).valueOrNull ?? const <String, int>{};
   final events = ref.watch(recentAppEventsProvider).valueOrNull ?? const <AppEventEntry>[];
+  final mlModel = ref.watch(mlRiskModelProvider).valueOrNull;
 
   final inputs = habits
       .map(
@@ -232,5 +246,6 @@ final octyInsightProvider = Provider<OctyInsight>((ref) {
     loginRegularity: loginRegularity,
     assistantEngagement: assistantEngagement,
     eveningUsagePattern: eveningPattern,
+    mlModel: mlModel,
   );
 });

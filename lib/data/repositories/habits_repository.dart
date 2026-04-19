@@ -11,7 +11,7 @@ class HabitsRepository {
 
   String get _uid {
     final uid = _auth.currentUser?.uid;
-    if (uid == null) throw StateError('User not signed in');
+    if (uid == null) throw StateError('Kullanıcı giriş yapmadı');
     return uid;
   }
 
@@ -88,7 +88,7 @@ class HabitsRepository {
     final habitSnap = await habitRef.get();
     final habitData = habitSnap.data();
     if (habitData == null) {
-      throw StateError('Habit not found');
+      throw StateError('Alışkanlık bulunamadı');
     }
 
     final logsQuery = await _db

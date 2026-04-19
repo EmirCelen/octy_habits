@@ -1,0 +1,13 @@
+{
+  "intercept": -0.2,
+  "weights": {
+    "missing_ratio_avg": 2.2,
+    "weekly_adherence_avg": -1.2,
+    "streak_penalty_avg": 0.9,
+    "done_today_ratio": -1.0,
+    "login_regularity": -0.7,
+    "assistant_engagement": -0.2,
+    "evening_usage_pattern": -0.1,
+    "total_habits": 0.4
+  }
+}

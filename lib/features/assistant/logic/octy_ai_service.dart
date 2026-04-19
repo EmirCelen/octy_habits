@@ -118,28 +118,27 @@ class OctyAiService {
     final firstPending = pending.isNotEmpty ? pending.first : null;
 
     if (context.totalHabits == 0) {
-      return 'Henuz aliskanlik yok. Bugun sadece 1 tane ekle: kucuk ve net bir hedef sec, sonra birlikte planlayalim.';
+      return 'Henüz alışkanlık yok. Bugün sadece 1 tane ekle: küçük ve net bir hedef seç, sonra birlikte planlayalım.';
     }
 
     if (lower.contains('plan') || lower.contains('ne yap')) {
       if (firstPending != null) {
-        return 'Bugun odak: "$firstPending". Simdi 5 dakikalik mini bir tur baslat. Bitirince ikinci adim olarak kalanlardan birini sec.';
+        return 'Bugün odak: "$firstPending". Şimdi 5 dakikalık mini bir tur başlat. Bitirince ikinci adım olarak kalanlardan birini seç.';
       }
-      return 'Bugun harika gidiyorsun. Bir mini tekrar turu yap ve yarin icin tek bir net saat belirle.';
+      return 'Bugün harika gidiyorsun. Bir mini tekrar turu yap ve yarın için tek bir net saat belirle.';
     }
 
     if (lower.contains('motiv') || lower.contains('zor') || lower.contains('usengec')) {
       if (remaining <= 0) {
-        return 'Bugun tamamsin, guzel is. Zinciri korumak icin yarin en kolay aliskanlikla basla.';
+        return 'Bugün tamamsın, güzel iş. Zinciri korumak için yarın en kolay alışkanlıkla başla.';
       }
-      return 'Su an mukemmel olman gerekmiyor. Sadece 1 aliskanligi tamamla ve ivmeyi ac; gerisi daha kolay gelecek.';
+      return 'Şu an mükemmel olman gerekmiyor. Sadece 1 alışkanlığı tamamla ve ivmeyi aç; gerisi daha kolay gelecek.';
     }
 
     if (remaining <= 0) {
-      return 'Bugun tum hedefleri tamamladin. Bu ritmi korumak icin yarin ilk aliskanliga saat koyup sabitle.';
+      return 'Bugün tüm hedefleri tamamladın. Bu ritmi korumak için yarın ilk alışkanlığa saat koyup sabitle.';
     }
 
-    return 'Bugun ${context.doneToday}/${context.totalHabits} durumundasin. Simdi tek bir aliskanlik sec ve 5 dakika uygula. Sonra bana "bitti" yaz, bir sonraki adimi vereyim.';
+    return 'Bugün ${context.doneToday}/${context.totalHabits} durumundasın. Şimdi tek bir alışkanlık seç ve 5 dakika uygula. Sonra bana "bitti" yaz, bir sonraki adımı vereyim.';
   }
 }
-

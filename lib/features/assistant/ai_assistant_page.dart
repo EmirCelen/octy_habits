@@ -18,7 +18,7 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
   final List<_ChatMessage> _messages = [
     const _ChatMessage(
       role: _MessageRole.assistant,
-      text: 'Ben Octy. Bugun hangi aliskanlikta takildigini yaz, birlikte net bir plan cikaralim.',
+      text: 'Ben Octy. Bugün hangi alışkanlıkta takıldığını yaz, birlikte net bir plan çıkaralım.',
     ),
   ];
   bool _sending = false;
@@ -101,7 +101,7 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Octy Asistan'),
+        title: const Text('Octy Asistanı'),
       ),
       body: DecoratedBox(
         decoration: const BoxDecoration(
@@ -303,7 +303,7 @@ class _ContextBar extends StatelessWidget {
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Text(
-        'Bugun: $doneToday/$totalHabits  •  Streak: $streak gun  •  Risk: ${_riskLabel(riskLevel)} ${(riskScore * 100).round()}%',
+        'Bugün: $doneToday/$totalHabits  •  Seri: $streak gün  •  Risk: ${_riskLabel(riskLevel)} ${(riskScore * 100).round()}%',
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
           color: Colors.white70,
         ),
@@ -314,11 +314,11 @@ class _ContextBar extends StatelessWidget {
   String _riskLabel(RiskLevel level) {
     switch (level) {
       case RiskLevel.low:
-        return 'Dusuk';
+        return 'Düşük';
       case RiskLevel.medium:
         return 'Orta';
       case RiskLevel.high:
-        return 'Yuksek';
+        return 'Yüksek';
     }
   }
 }

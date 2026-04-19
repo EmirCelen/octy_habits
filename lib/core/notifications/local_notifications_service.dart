@@ -69,8 +69,8 @@ class LocalNotificationsService {
     const details = NotificationDetails(
       android: AndroidNotificationDetails(
         'daily_habit_reminder',
-        'Habit Reminders',
-        channelDescription: 'Daily/weekly reminders for habits',
+        'Alışkanlık Hatırlatıcıları',
+        channelDescription: 'Alışkanlıklar için günlük/haftalık hatırlatmalar',
         importance: Importance.high,
         priority: Priority.high,
       ),
@@ -89,7 +89,7 @@ class LocalNotificationsService {
       await _plugin.zonedSchedule(
         _idFromDayIndex(i),
         'Octy',
-        'Bugunku aliskanliklarini tamamlamayi unutma.',
+        'Bugünkü alışkanlıklarını tamamlamayı unutma.',
         next,
         details,
         uiLocalNotificationDateInterpretation:

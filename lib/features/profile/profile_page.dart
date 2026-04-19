@@ -20,7 +20,7 @@ class ProfilePage extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           child: authAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Error: $e')),
+            error: (e, _) => Center(child: Text('Hata: $e')),
             data: (user) {
               final uid = user?.uid ?? '-';
               return Column(
@@ -35,7 +35,7 @@ class ProfilePage extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Kullanici ID', style: Theme.of(context).textTheme.titleSmall),
+                        Text('Kullanıcı ID', style: Theme.of(context).textTheme.titleSmall),
                         const SizedBox(height: 4),
                         Text(
                           uid,
@@ -57,7 +57,7 @@ class ProfilePage extends ConsumerWidget {
                             loading: () => const Text('...'),
                             error: (e, _) => Text('Err: $e'),
                             data: (habits) => _Metric(
-                              label: 'Aktif Aliskanlik',
+                              label: 'Aktif Alışkanlık',
                               value: '${habits.length}',
                             ),
                           ),
@@ -72,7 +72,7 @@ class ProfilePage extends ConsumerWidget {
                             data: (todayMap) {
                               final done = todayMap.values.where((v) => v).length;
                               return _Metric(
-                                label: 'Bugun Tamam',
+                                label: 'Bugün Tamam',
                                 value: '$done',
                               );
                             },
@@ -96,7 +96,7 @@ class ProfilePage extends ConsumerWidget {
                         ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: const Icon(Icons.logout),
-                          title: const Text('Cikis yap'),
+                          title: const Text('Çıkış yap'),
                           onTap: () async {
                             await ref.read(firebaseAuthProvider).signOut();
                             if (context.mounted) context.go('/gate');

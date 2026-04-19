@@ -25,13 +25,13 @@ class _HabitsPageState extends ConsumerState<HabitsPage> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Aliskanlik Ekle'),
+          title: const Text('Alışkanlık Ekle'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: titleCtrl,
-                decoration: const InputDecoration(labelText: 'Baslik (orn. Kitap oku)'),
+                decoration: const InputDecoration(labelText: 'Başlık (örn. Kitap oku)'),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
@@ -47,7 +47,7 @@ class _HabitsPageState extends ConsumerState<HabitsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Iptal'),
+              child: const Text('İptal'),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
@@ -77,13 +77,13 @@ class _HabitsPageState extends ConsumerState<HabitsPage> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Aliskanlik Duzenle'),
+          title: const Text('Alışkanlık Düzenle'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: titleCtrl,
-                decoration: const InputDecoration(labelText: 'Baslik'),
+                decoration: const InputDecoration(labelText: 'Başlık'),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
@@ -99,7 +99,7 @@ class _HabitsPageState extends ConsumerState<HabitsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Iptal'),
+              child: const Text('İptal'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
@@ -128,14 +128,14 @@ class _HabitsPageState extends ConsumerState<HabitsPage> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Aliskanligi Sil'),
+          title: const Text('Alışkanlığı Sil'),
           content: Text(
-            '"${habit.title}" silinecek. Bu aliskanliga ait tum kayitlar da silinir.',
+            '"${habit.title}" silinecek. Bu alışkanlığa ait tüm kayıtlar da silinir.',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Iptal'),
+              child: const Text('İptal'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
@@ -154,9 +154,9 @@ class _HabitsPageState extends ConsumerState<HabitsPage> {
       final messenger = ScaffoldMessenger.of(context);
       final controller = messenger.showSnackBar(
         SnackBar(
-          content: const Text('Aliskanlik silindi.'),
+          content: const Text('Alışkanlık silindi.'),
           action: SnackBarAction(
-            label: 'UNDO',
+            label: 'GERİ AL',
             onPressed: () async {
               await repo.restoreDeletedHabit(snapshot);
             },
@@ -168,7 +168,7 @@ class _HabitsPageState extends ConsumerState<HabitsPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
+      ).showSnackBar(SnackBar(content: Text('Silme başarısız: $e')));
     }
   }
 
@@ -198,7 +198,7 @@ class _HabitsPageState extends ConsumerState<HabitsPage> {
     final todayAsync = ref.watch(todayCompletionsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Aliskanliklar')),
+      appBar: AppBar(title: const Text('Alışkanlıklar')),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddDialog(context),
         child: const Icon(Icons.add),
@@ -213,11 +213,11 @@ class _HabitsPageState extends ConsumerState<HabitsPage> {
         ),
         child: habitsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error: $e')),
+          error: (e, _) => Center(child: Text('Hata: $e')),
           data: (habits) {
             return todayAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
+              error: (e, _) => Center(child: Text('Hata: $e')),
               data: (todayMap) {
                 final sorted = _sortHabits(habits);
                 final filtered = _applyFilter(sorted, todayMap, _filter);
@@ -226,7 +226,7 @@ class _HabitsPageState extends ConsumerState<HabitsPage> {
 
                 if (habits.isEmpty) {
                   return const Center(
-                    child: Text('Henuz aliskanlik yok. + ile ekleyebilirsin.'),
+                    child: Text('Henüz alışkanlık yok. + ile ekleyebilirsin.'),
                   );
                 }
 
@@ -240,7 +240,7 @@ class _HabitsPageState extends ConsumerState<HabitsPage> {
                           if (_filter != _HabitFilter.all) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Siralama sadece Tum sekmesinde calisir.'),
+                                content: Text('Sıralama sadece Tümü sekmesinde çalışır.'),
                               ),
                             );
                             return;
@@ -264,7 +264,7 @@ class _HabitsPageState extends ConsumerState<HabitsPage> {
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 8),
                                 child: Text(
-                                  'Uzun basip surukleyerek siralamayi degistir.',
+                                  'Uzun basıp sürükleyerek sıralamayı değiştir.',
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: Colors.white60,
                                   ),
@@ -276,7 +276,7 @@ class _HabitsPageState extends ConsumerState<HabitsPage> {
                                 padding: const EdgeInsets.only(top: 24),
                                 child: Center(
                                   child: Text(
-                                    'Bu filtrede aliskanlik yok.',
+                                    'Bu filtrede alışkanlık yok.',
                                     style: Theme.of(context).textTheme.bodyLarge,
                                   ),
                                 ),
@@ -376,11 +376,11 @@ class _TopSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: _MetricChip(label: 'Total', value: '$total')),
+        Expanded(child: _MetricChip(label: 'Toplam', value: '$total')),
         const SizedBox(width: 8),
-        Expanded(child: _MetricChip(label: 'Done Today', value: '$done')),
+        Expanded(child: _MetricChip(label: 'Bugün Bitti', value: '$done')),
         const SizedBox(width: 8),
-        Expanded(child: _MetricChip(label: 'Pending', value: '$pending')),
+        Expanded(child: _MetricChip(label: 'Kalan', value: '$pending')),
       ],
     );
   }
@@ -442,7 +442,7 @@ class _FilterBar extends StatelessWidget {
         children: [
           _FilterButton(
             selected: current == _HabitFilter.all,
-            title: 'Tum',
+            title: 'Tümü',
             onTap: () => onChanged(_HabitFilter.all),
           ),
           _FilterButton(
@@ -559,7 +559,7 @@ class _HabitCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Goal: ${habit.goalPerWeek}/week',
+                      'Hedef: ${habit.goalPerWeek}/hafta',
                       style: Theme.of(
                         context,
                       ).textTheme.bodyMedium?.copyWith(
@@ -590,11 +590,11 @@ class _HabitCard extends StatelessWidget {
                 itemBuilder: (context) => [
                   PopupMenuItem<String>(
                     value: 'edit',
-                    child: Text('Duzenle'),
+                    child: Text('Düzenle'),
                   ),
                   PopupMenuItem<String>(
                     value: 'pin',
-                    child: Text(habit.isPinned ? 'Sabitlemeyi kaldir' : 'Sabitle'),
+                    child: Text(habit.isPinned ? 'Sabitlemeyi kaldır' : 'Sabitle'),
                   ),
                   PopupMenuItem<String>(
                     value: 'delete',

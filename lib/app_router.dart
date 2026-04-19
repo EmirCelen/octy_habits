@@ -35,7 +35,7 @@ final appRouter = GoRouter(
           path: '/habit/:habitId/calendar',
           builder: (_, state) => HabitCalendarPage(
             habitId: state.pathParameters['habitId']!,
-            title: state.extra is String ? state.extra! as String : 'Calendar',
+            title: state.extra is String ? state.extra! as String : 'Takvim',
           ),
         ),
         GoRoute(path: '/stats', builder: (_, __) => const StatsPage()),

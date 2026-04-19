@@ -46,11 +46,11 @@ class AppShell extends StatelessWidget {
           NavigationDestination(icon: Icon(Icons.home_rounded), label: 'Ana'),
           NavigationDestination(
             icon: Icon(Icons.checklist_rounded),
-            label: 'Aliskanliklar',
+            label: 'Alışkanlıklar',
           ),
           NavigationDestination(
             icon: Icon(Icons.bar_chart_rounded),
-            label: 'Istatistik',
+            label: 'İstatistik',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_rounded),

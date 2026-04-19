@@ -166,7 +166,7 @@ class StartupGatePage extends ConsumerWidget {
 
     return authAsync.when(
       loading: () => const _FullPageLoader(),
-      error: (e, _) => _FullPageError(message: 'Auth error: $e'),
+      error: (e, _) => _FullPageError(message: 'Giriş hatası: $e'),
       data: (user) {
         if (user == null) return const _AuthPage();
         _logAppOpenIfNeeded(ref);
@@ -174,7 +174,7 @@ class StartupGatePage extends ConsumerWidget {
         final profileAsync = ref.watch(userProfileProvider(user.uid));
         return profileAsync.when(
           loading: () => const _FullPageLoader(),
-          error: (e, _) => _FullPageError(message: 'Profile error: $e'),
+          error: (e, _) => _FullPageError(message: 'Profil hatası: $e'),
           data: (profile) {
             final onboardingDone = profile?['onboardingCompleted'] == true;
             final setupDone = profile?['setupCompleted'] == true;
@@ -245,7 +245,7 @@ class _AuthPageState extends ConsumerState<_AuthPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Giris yapilamadi: ${e.code}')));
+      ).showSnackBar(SnackBar(content: Text('Giriş yapılamadı: ${e.code}')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -285,13 +285,13 @@ class _AuthPageState extends ConsumerState<_AuthPage> {
                       ),
                       const SizedBox(height: 14),
                       Text(
-                        'Octy Habits',
+                        'Octy',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        'Aliskanlik takibini baslatmak icin devam et.',
+                        'Alışkanlık takibini başlatmak için devam et.',
                         textAlign: TextAlign.center,
                         style: Theme.of(
                           context,
@@ -300,7 +300,7 @@ class _AuthPageState extends ConsumerState<_AuthPage> {
                       const SizedBox(height: 18),
                       ElevatedButton(
                         onPressed: _loading ? null : _signInAnonymously,
-                        child: Text(_loading ? 'Baglaniyor...' : 'Devam Et'),
+                        child: Text(_loading ? 'Bağlanıyor...' : 'Devam Et'),
                       ),
                     ],
                   ),
@@ -325,16 +325,16 @@ class _OnboardingPage extends ConsumerStatefulWidget {
 class _OnboardingPageState extends ConsumerState<_OnboardingPage> {
   static const _steps = <(String title, String body)>[
     (
-      'Hedeflerini sec',
-      'Kendine uygun haftalik hedef koy, Octy kalanini takip etsin.',
+      'Hedeflerini seç',
+      'Kendine uygun haftalık hedef koy, Octy kalanını takip etsin.',
     ),
     (
-      'Her gun tek dokunus',
-      'Sadece bugunku kutuyu isaretle. Zincirin bozulmadan buyusun.',
+      'Her gün tek dokunuş',
+      'Sadece bugünkü kutuyu işaretle. Zincirin bozulmadan büyüsün.',
     ),
     (
-      'Ilerlemeni gor',
-      'Stats ve Calendar ile neyin ise yaradigini net sekilde gor.',
+      'İlerlemeni gör',
+      'İstatistik ve Takvim ile neyin işe yaradığını net şekilde gör.',
     ),
   ];
 
@@ -440,7 +440,7 @@ class _OnboardingPageState extends ConsumerState<_OnboardingPage> {
                         child: Text(
                           _saving
                               ? 'Kaydediliyor...'
-                              : (isLast ? 'Basla' : 'Devam'),
+                              : (isLast ? 'Başla' : 'Devam'),
                         ),
                       ),
                     ],
@@ -530,7 +530,7 @@ class _SetupPageState extends ConsumerState<_SetupPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Ilk aliskanligini ekle',
+                        'İlk alışkanlığını ekle',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
@@ -566,14 +566,14 @@ class _SetupPageState extends ConsumerState<_SetupPage> {
                         onPressed: _saving
                             ? null
                             : () => _finishSetup(withSample: true),
-                        child: Text(_saving ? 'Hazirlaniyor...' : 'Takibe Basla'),
+                        child: Text(_saving ? 'Hazırlanıyor...' : 'Takibe Başla'),
                       ),
                       const SizedBox(height: 8),
                       TextButton(
                         onPressed: _saving
                             ? null
                             : () => _finishSetup(withSample: false),
-                        child: const Text('Simdilik atla'),
+                        child: const Text('Şimdilik atla'),
                       ),
                     ],
                   ),

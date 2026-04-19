@@ -70,13 +70,13 @@ class SettingsPage extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           child: authAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Error: $e')),
+            error: (e, _) => Center(child: Text('Hata: $e')),
             data: (user) {
               if (user == null) {
                 return Center(
                   child: ElevatedButton(
                     onPressed: () => context.go('/gate'),
-                    child: const Text('Girise Git'),
+                    child: const Text('Girişe Git'),
                   ),
                 );
               }
@@ -84,7 +84,7 @@ class SettingsPage extends ConsumerWidget {
               final profileAsync = ref.watch(userProfileProvider(user.uid));
               return profileAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Error: $e')),
+                error: (e, _) => Center(child: Text('Hata: $e')),
                 data: (profile) {
                   final reminders = profile?['remindersEnabled'] != false;
                   final mondayFirst = profile?['mondayFirst'] == true;
@@ -104,8 +104,8 @@ class SettingsPage extends ConsumerWidget {
                           children: [
                             SwitchListTile(
                               value: reminders,
-                              title: const Text('Gunluk hatirlatici'),
-                              subtitle: const Text('Her gun kisa bir durtme al.'),
+                              title: const Text('Günlük hatırlatıcı'),
+                              subtitle: const Text('Her gün kısa bir dürtme al.'),
                               onChanged: (v) => _savePreference(
                                 ref: ref,
                                 uid: user.uid,
@@ -121,7 +121,7 @@ class SettingsPage extends ConsumerWidget {
                             ),
                             ListTile(
                               leading: const Icon(Icons.schedule_rounded),
-                              title: const Text('Hatirlatici saati'),
+                              title: const Text('Hatırlatıcı saati'),
                               subtitle: Text(
                                 '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
                               ),
@@ -153,7 +153,7 @@ class SettingsPage extends ConsumerWidget {
                                     'Paz',
                                     'Pzt',
                                     'Sal',
-                                    'Car',
+                                    'Çar',
                                     'Per',
                                     'Cum',
                                     'Cmt',
@@ -181,8 +181,8 @@ class SettingsPage extends ConsumerWidget {
                             ),
                             SwitchListTile(
                               value: mondayFirst,
-                              title: const Text('Hafta Pazartesi baslar'),
-                              subtitle: const Text('Takvim hizalamasini etkiler.'),
+                              title: const Text('Hafta Pazartesi başlar'),
+                              subtitle: const Text('Takvim hizalamasını etkiler.'),
                               onChanged: (v) => _savePreference(
                                 ref: ref,
                                 uid: user.uid,
@@ -198,7 +198,7 @@ class SettingsPage extends ConsumerWidget {
                         title: 'Hesap',
                         child: ListTile(
                           leading: const Icon(Icons.logout),
-                          title: const Text('Cikis yap'),
+                          title: const Text('Çıkış yap'),
                           onTap: () async {
                             await ref.read(firebaseAuthProvider).signOut();
                             if (context.mounted) context.go('/gate');

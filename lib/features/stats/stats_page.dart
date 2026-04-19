@@ -30,7 +30,7 @@ class StatsPage extends ConsumerWidget {
             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Istatistikler', style: Theme.of(context).textTheme.headlineMedium),
+                Text('İstatistikler', style: Theme.of(context).textTheme.headlineMedium),
                 const SizedBox(height: 16),
                 habitsAsync.when(
                   loading: () => const _SkeletonCard(height: 250),
@@ -62,7 +62,7 @@ class StatsPage extends ConsumerWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Haftalik Tamamlanma Orani',
+                                    'Haftalık Tamamlanma Oranı',
                                     style: Theme.of(context).textTheme.headlineSmall,
                                   ),
                                   const SizedBox(height: 8),
@@ -120,7 +120,7 @@ class StatsPage extends ConsumerWidget {
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 8),
                                 child: Text(
-                                  'Son 30 gun',
+                                  'Son 30 gün',
                                   style: Theme.of(context).textTheme.titleMedium
                                       ?.copyWith(color: Colors.white70),
                                 ),
@@ -144,7 +144,7 @@ class StatsPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'Seri Ozeti',
+                  'Seri Özeti',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 10),
@@ -320,7 +320,7 @@ class _StreakTile extends StatelessWidget {
                 Text(title, style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
-                  '$value days',
+                  '$value gün',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -342,7 +342,7 @@ class _ErrorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _GlassCard(
       child: Text(
-        'Error: $error',
+        'Hata: $error',
         style: Theme.of(context).textTheme.bodyMedium,
       ),
     );

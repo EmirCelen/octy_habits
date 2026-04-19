@@ -76,6 +76,6 @@ void main() {
     );
 
     expect(insight.riskLevel, RiskLevel.low);
-    expect(insight.microNudge, contains('Ilk aliskanligini ekle'));
+    expect(insight.microNudge, contains('İlk alışkanlığını ekle'));
   });
 }

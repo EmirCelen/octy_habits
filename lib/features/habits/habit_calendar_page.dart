@@ -9,7 +9,11 @@ class HabitCalendarPage extends ConsumerStatefulWidget {
   final String habitId;
   final String title;
 
-  const HabitCalendarPage({super.key, required this.habitId, required this.title});
+  const HabitCalendarPage({
+    super.key,
+    required this.habitId,
+    required this.title,
+  });
 
   @override
   ConsumerState<HabitCalendarPage> createState() => _HabitCalendarPageState();
@@ -52,14 +56,13 @@ class _HabitCalendarPageState extends ConsumerState<HabitCalendarPage> {
         : _weekStart(_focusDate, mondayFirst: mondayFirst);
     final rangeEnd = _monthly
         ? _monthEnd
-        : _weekStart(_focusDate, mondayFirst: mondayFirst).add(
-            const Duration(days: 6),
-          );
+        : _weekStart(
+            _focusDate,
+            mondayFirst: mondayFirst,
+          ).add(const Duration(days: 6));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Habit Calendar'),
-      ),
+      appBar: AppBar(title: const Text('Alışkanlık Takvimi')),
       body: StreamBuilder<Set<String>>(
         stream: repo.watchHabitCompletedDateKeysInRange(
           habitId: widget.habitId,
@@ -71,7 +74,7 @@ class _HabitCalendarPageState extends ConsumerState<HabitCalendarPage> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError) {
-            return Center(child: Text('Error: ${snap.error}'));
+            return Center(child: Text('Hata: ${snap.error}'));
           }
 
           final doneKeys = snap.data ?? <String>{};
@@ -114,7 +117,10 @@ class _HabitCalendarPageState extends ConsumerState<HabitCalendarPage> {
                         ),
                         const SizedBox(height: 12),
                         _HeaderRow(
-                          label: DateFormat('MMMM y').format(_focusDate),
+                          label: DateFormat(
+                            'MMMM y',
+                            'tr_TR',
+                          ).format(_focusDate),
                           onPrev: () {
                             setState(() {
                               if (_monthly) {
@@ -197,14 +203,14 @@ class _ModeToggle extends StatelessWidget {
           Expanded(
             child: _ToggleButton(
               selected: !monthly,
-              title: 'Weekly',
+              title: 'Haftalık',
               onTap: () => onModeChanged(false),
             ),
           ),
           Expanded(
             child: _ToggleButton(
               selected: monthly,
-              title: 'Monthly',
+              title: 'Aylık',
               onTap: () => onModeChanged(true),
             ),
           ),
@@ -320,7 +326,9 @@ class _MonthGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final firstDay = DateTime(month.year, month.month, 1);
-    final leading = mondayFirst ? (firstDay.weekday - 1) : (firstDay.weekday % 7);
+    final leading = mondayFirst
+        ? (firstDay.weekday - 1)
+        : (firstDay.weekday % 7);
     final gridStart = firstDay.subtract(Duration(days: leading));
     final cellCount = 42;
 
@@ -362,7 +370,11 @@ class _WeekGrid extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: AspectRatio(
               aspectRatio: 1,
-              child: _DayCell(date: d, doneKeys: doneKeys, inCurrentPeriod: true),
+              child: _DayCell(
+                date: d,
+                doneKeys: doneKeys,
+                inCurrentPeriod: true,
+              ),
             ),
           ),
         );
@@ -387,9 +399,8 @@ class _DayCell extends StatelessWidget {
     final key = HabitLogsRepository.dateKey(date);
     final isDone = doneKeys.contains(key);
     final now = DateTime.now();
-    final isToday = now.year == date.year &&
-        now.month == date.month &&
-        now.day == date.day;
+    final isToday =
+        now.year == date.year && now.month == date.month && now.day == date.day;
 
     final color = isDone
         ? const Color(0xFF9BCB4A).withValues(alpha: inCurrentPeriod ? 0.9 : 0.5)
@@ -401,7 +412,9 @@ class _DayCell extends StatelessWidget {
         color: color,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isToday ? const Color(0xFF7C5CFF) : Colors.white.withValues(alpha: 0.03),
+          color: isToday
+              ? const Color(0xFF7C5CFF)
+              : Colors.white.withValues(alpha: 0.03),
           width: 1.4,
         ),
       ),
@@ -429,7 +442,7 @@ class _Legend extends StatelessWidget {
     return Row(
       children: [
         Text(
-          'Habit Completion',
+          'Alışkanlık Tamamlama',
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: Colors.white70),

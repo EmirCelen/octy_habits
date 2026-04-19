@@ -11,7 +11,7 @@ class HabitLogsRepository {
 
   String get _uid {
     final uid = _auth.currentUser?.uid;
-    if (uid == null) throw StateError('User not signed in');
+    if (uid == null) throw StateError('Kullanıcı giriş yapmadı');
     return uid;
   }
 

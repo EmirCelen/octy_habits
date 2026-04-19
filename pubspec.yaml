@@ -36,3 +36,4 @@ flutter:
   assets:
     - assets/anim/octy_anim.webp
     - assets/octy/
+    - assets/ml/model.json
